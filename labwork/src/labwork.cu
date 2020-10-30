@@ -169,7 +169,7 @@ void Labwork::labwork3_GPU() {
 void Labwork::labwork4_GPU() {
 }
 
-void Labwork::labwork5_GPU() {
+void Labwork::labwork5_CPU() {
 }
 
 void Labwork::labwork5_GPU(bool shared) {
