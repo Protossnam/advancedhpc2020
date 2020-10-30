@@ -1,39 +1,14 @@
 \documentclass[10pt, a4paper]{article}
 
 \usepackage[utf8]{inputenc}
-\usepackage{verbatimbox}
 \usepackage{graphicx}
 \usepackage{float}
 \usepackage{titling}
 
+\usepackage{minted}
 \usepackage{xcolor,listings}
 \usepackage{textcomp}
 \usepackage{color}
-
-\definecolor{codegreen}{rgb}{0,0.6,0}
-\definecolor{codegray}{rgb}{0.5,0.5,0.5}
-\definecolor{codepurple}{HTML}{C42043}
-\definecolor{backcolour}{HTML}{F2F2F2}
-\definecolor{bookColor}{cmyk}{0,0,0,0.90}  
-\color{bookColor}
-
-\lstset{upquote=true}
-
-\lstdefinestyle{mystyle}{
-    backgroundcolor=\color{backcolour},   
-    commentstyle=\color{codegreen},
-    keywordstyle=\color{codepurple},
-    stringstyle=\color{codepurple},
-    basicstyle=\footnotesize\ttfamily,
-    breakatwhitespace=false,
-    breaklines=true,
-    captionpos=b,
-    keepspaces=true,
-    showspaces=false,
-    showstringspaces=false,
-    showtabs=false,
-}
-\lstset{style=mystyle}
 
 \newcommand{\subtitle}[1]{%
   \posttitle{%
@@ -45,8 +20,8 @@
 \usepackage{hyperref}
 \usepackage{listings}
 
-\title{[MI3.04a] HPC}
-\subtitle{Report - Labwork 0 \\ Investigate}
+\title{[MI3.04a] Advanced Programming for HPC}
+\subtitle{Report Investigate \\ Labwork 1}
 \author{HUYNH Vinh Nam \\ M19.ICT.007}
 \date{October 2020}
 
@@ -58,27 +33,32 @@
 
 % Report structure
 \begin{itemize}
-    \item How do you compile the labwork project?
+    \item How do you compile the labwork project? 
+    \begin{minted}{bash}
+        cmake CMakeLists.txt
+        make -j
+        mkdir build
+        mv labwork build
+    \end{minted}
     
-    \vspace{1mm}
-    cmake CMakeLists.txt \\
-    make -j
-    \item What do you need to compile the project?
-	
-	\vspace{1mm}
-	Read the README.md file
-    \item Result 
+    \item What do you need to compile the project? 
+	\newline
+	- Read the instruction in the README.md file
     
-    \vspace{1mm}
-    ./labwork 1 ../data/cloud.jpeg
-    \begin{verbatim}
-    USTH ICT Master 2018, Advanced Programming for HPC. 
-    Warming up... 
-    Starting labwork 1
-    labwork 1 CPU ellapsed 264.2ms
-    labwork 1 ellapsed 5.7ms
+    \item Write command and output for your compilation
+    - Command: 
+    \begin{minted}{bash}
+        ./labwork 1 ../data/cloud.jpeg
+    \end{minted}
+    - Output:
+    \begin{minted}[escapeinside=||,formatcom=\color{black}]{bash}
+        USTH ICT Master 2018, Advanced Programming |for| HPC. 
+        Warming up... 
+        Starting labwork 1
+        labwork 1 CPU ellapsed 264.2ms
+        labwork 1 ellapsed 5.7ms
         
-    \end{verbatim}
+    \end{minted}
     
 \end{itemize}
 

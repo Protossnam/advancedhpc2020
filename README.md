@@ -14,9 +14,8 @@ Student Info
 
 * Name: Huynh Vinh Nam
 * Key:
-ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCu/5rYY7AKggZgNbCkSGtCiGzuVxfv5dFTHcstMvhYKDtlk9jAjmuRx2wK6siVsNUyS/UAuU8rz/uAk1yTnIuc9gtQGz2pVwQd+Z0ipbrdDiuGi+Q2znLSV+X98jViy8bqTijvT3600QSHqKOisehWOUOleOdp+HqZCqsHHbGrd9BvbJqbt/Lnz93b0j9iFN3j0SBH+yIPi/MHpJpqQuxZpPVXIODEFVFqnMfViP8UWkhqUVbE8JobUfDXRcucxTFG33WIZhuxUfq3aOsv7/eqHuY9MB8rc+QdA2lKJDy3+K6ES2Q0bsgtCaC8hfmk/fA/Qg4DG4RCkN0fWOSxsEah huynh vinh nam@DESKTOP-CGK0OD5
 
 ```
-ssh-rsa ThisIsasAMpleKey
+ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCu/5rYY7AKggZgNbCkSGtCiGzuVxfv5dFTHcstMvhYKDtlk9jAjmuRx2wK6siVsNUyS/UAuU8rz/uAk1yTnIuc9gtQGz2pVwQd+Z0ipbrdDiuGi+Q2znLSV+X98jViy8bqTijvT3600QSHqKOisehWOUOleOdp+HqZCqsHHbGrd9BvbJqbt/Lnz93b0j9iFN3j0SBH+yIPi/MHpJpqQuxZpPVXIODEFVFqnMfViP8UWkhqUVbE8JobUfDXRcucxTFG33WIZhuxUfq3aOsv7/eqHuY9MB8rc+QdA2lKJDy3+K6ES2Q0bsgtCaC8hfmk/fA/Qg4DG4RCkN0fWOSxsEah huynh vinh nam@DESKTOP-CGK0OD5
 ```
 
