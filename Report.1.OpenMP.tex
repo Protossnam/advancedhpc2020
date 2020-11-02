@@ -1,0 +1,122 @@
+\documentclass[10pt, a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[left=2cm, right=2cm, top=0.5in, bottom=0.5in, includefoot, headheight=13.6pt]{geometry}
+
+\usepackage[utf8]{inputenc}
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{titling}
+
+\usepackage{minted}
+\usepackage{xcolor,listings}
+\usepackage{textcomp}
+\usepackage{color}
+
+\usepackage{tikz}
+\usepackage{pgfplots}
+
+\usepackage[caption = false]{subfig}
+
+\usepackage[square, comma, numbers, sort&compress]{natbib}
+\usepackage{graphicx, color}
+
+\newcommand{\subtitle}[1]{%
+  \posttitle{%
+    \par\end{center}
+    \begin{center}\LARGE#1\end{center}
+    \vskip0.5cm}%
+}
+
+\usepackage{hyperref}
+\usepackage{listings}
+
+\title{[MI3.04a] Advanced Programming for HPC}
+\subtitle{Report OpenMP \\ Labwork 1}
+\author{HUYNH Vinh Nam \\ M19.ICT.007}
+\date{November 2020}
+
+\renewcommand{\baselinestretch}{1.5} 
+
+\begin{document}
+% Report title
+\maketitle
+
+% Report structure
+\begin{itemize}
+    \item Input and outputs images
+        \begin{center}
+            \begin{figure}[H]
+                \centering
+                \subfloat[Original Image]{\includegraphics[scale=0.25]{images/cloud.jpeg}} 
+                \\
+                \subfloat[Without OpenMP]{\includegraphics[scale=0.25]{images/labwork2-cpu-out.jpg}} \hspace{0.5cm}
+                \subfloat[With OpenMP]{\includegraphics[scale=0.25]{images/labwork2-openmp-out.jpg}} 
+                \caption{Labwork 1 input and outputs}
+                \label{fig:omp}
+            \end{figure}
+        \end{center}
+\end{itemize}
+
+\clearpage
+
+\begin{itemize}
+    \item How you implement the conversion? 
+    \newline
+    - Simply add the pragma command (since every pixel is independent)
+    
+    \begin{minted}{C++}
+void Labwork::labwork1_OpenMP() {
+    int pixelCount = inputImage->width * inputImage->height;
+    outputImage = static_cast<char *>(malloc(pixelCount * 3));
+    // do something here
+
+    for (int j = 0; j < 100; j++) {     // let's do it 100 times, otherwise it's too fast!
+        # pragma omp parallel for
+        for (int i = 0; i < pixelCount; i++) {
+            outputImage[i * 3] = (char) (((int) inputImage->buffer[i * 3] +
+                                          (int) inputImage->buffer[i * 3 + 1] +
+                                          (int) inputImage->buffer[i * 3 + 2]) / 3);
+            outputImage[i * 3 + 1] = outputImage[i * 3];
+            outputImage[i * 3 + 2] = outputImage[i * 3];
+        }
+    }
+}
+    \end{minted}
+    
+    \item What's the speedup? 
+	\newline
+	- labwork 1 CPU ellapsed 264.6 ms
+	\newline
+	- labwork 1 ellapsed 6.4 ms (Default)
+	\newline
+	- labwork 1 ellapsed 36.8 ms (With OpenMP modified) 
+	\newline
+	$\rightarrow$ Look like 9-10 times faster!
+    
+    \item Try experimenting with different OpenMP parameters
+    \newline
+    - Team size
+
+    \begin{minted}{C++}
+        
+    \end{minted}
+    
+    - \textbf{static / dynamic}
+
+    \begin{minted}{C++}
+        
+    \end{minted}
+
+    - Graph 
+    \begin{figure}[H]
+        \centering
+        \begin{tikzpicture}
+
+        \end{tikzpicture}
+        \caption{OpenMP graph}
+        \label{fig:openmp-comparison}
+    \end{figure}
+    
+\end{itemize}
+
+\end{document}
