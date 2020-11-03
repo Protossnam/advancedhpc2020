@@ -37,7 +37,7 @@ int main(int argc, char **argv) {
             labwork.saveOutputImage("labwork2-cpu-out.jpg");
             printf("labwork 1 CPU ellapsed %.1fms\n", lwNum, timer.getElapsedTimeInMilliSec());
             for (int i=1; i<64; ++i) {
-	        timer.start();
+                timer.start();
                 labwork.labwork1_OpenMP(i);
                 printf("%d", i, timer.getElapsedTimeInMilliSec());
             }
