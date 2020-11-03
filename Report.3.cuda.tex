@@ -1,0 +1,106 @@
+\documentclass[10pt, a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[left=2cm, right=2cm, top=0.5in, bottom=0.5in, includefoot, headheight=13.6pt]{geometry}
+
+\usepackage[utf8]{inputenc}
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{titling}
+
+\usepackage{minted}
+\usepackage{xcolor,listings}
+\usepackage{textcomp}
+\usepackage{color}
+\usepackage{scrextend}
+
+\usepackage{tikz}
+\usepackage{pgfplots}
+
+\usepackage[caption = false]{subfig}
+
+\usepackage[square, comma, numbers, sort&compress]{natbib}
+\usepackage{graphicx, color}
+
+\newcommand{\subtitle}[1]{%
+  \posttitle{%
+    \par\end{center}
+    \begin{center}\LARGE#1\end{center}
+    \vskip0.5cm}%
+}
+
+\usepackage{hyperref}
+\usepackage{listings}
+
+\title{[MI3.04a] Advanced Programming for HPC}
+\subtitle{Hello, CUDA! \\ Labwork 3}
+\author{HUYNH Vinh Nam \\ M19.ICT.007}
+\date{November 2020}
+
+\renewcommand{\baselinestretch}{1.5} 
+
+\begin{document}
+% Report title
+\maketitle
+
+% Report structure
+
+\section*{Original Input}
+    \begin{center}
+        \begin{figure}[H]
+            \centering
+            \subfloat[Original Image]{\includegraphics[scale=0.25]{images/cloud.jpeg}}
+            \label{fig:cuda-input}
+        \end{figure}
+    \end{center}
+    
+\section*{Unwanted Output}
+    \begin{center}
+        \begin{figure}[H]
+            \centering
+            \subfloat[Unwanted Output]{\includegraphics[scale=0.25]{images/labwork3-gpu-unwanted-out.jpg}} 
+            \label{fig:cuda-uw-out}
+        \end{figure}
+    \end{center}
+
+\hfill
+\section*{Implementation}
+
+\begin{minted}{C++}
+__global__ void grayscale(uchar3 *input, uchar3 *output) {
+    int tid = threadIdx.x + blockIdx.x * blockDim.x;
+    output[tid].x = (unsigned char)((int)input[tid].x + (int)input[tid].y + (int)input[tid].z) / 3;
+    output[tid].z = output[tid].y = output[tid].x;
+}
+
+void Labwork::labwork3_GPU() {
+    // Calculate number of pixels
+    int pixelCount = inputImage->width * inputImage->height;
+    char *hostInput = inputImage->buffer;
+    outputImage = static_cast<char *>(malloc(pixelCount * 3));
+
+    // Allocate CUDA memory    
+    uchar3 *devInput;
+    uchar3 *devOutput;
+    cudaMalloc(&devInput, pixelCount * 3);
+    cudaMalloc(&devOutput, pixelCount * 3);
+    
+    // Copy CUDA Memory from CPU to GPU
+    cudaMemcpy(devInput, hostInput, pixelCount * 3, cudaMemcpyHostToDevice);
+
+    // Processing
+    int blockSize = 64;
+    int numBlock = pixelCount / blockSize;
+    grayscale<<<numBlock, blockSize>>>(devInput, devOutput);
+
+    // Copy CUDA Memory from GPU to CPU
+    cudaMemcpy(outputImage, devOutput, pixelCount * 3, cudaMemcpyDeviceToHost);
+
+    // Cleaning
+    free(hostInput);
+    cudaFree(devInput);
+    cudaFree(devOutput);
+}
+
+\end{minted}
+
+\end{document}
