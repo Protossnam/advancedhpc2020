@@ -36,8 +36,11 @@ int main(int argc, char **argv) {
             labwork.labwork1_CPU();
             labwork.saveOutputImage("labwork2-cpu-out.jpg");
             printf("labwork 1 CPU ellapsed %.1fms\n", lwNum, timer.getElapsedTimeInMilliSec());
-            timer.start();
-            labwork.labwork1_OpenMP();
+            for (int i=1; i<64; ++i) {
+	        timer.start();
+                labwork.labwork1_OpenMP(i);
+                printf("%d", i, timer.getElapsedTimeInMilliSec());
+            }
             labwork.saveOutputImage("labwork2-openmp-out.jpg");
             break;
         case 2:
@@ -106,10 +109,10 @@ void Labwork::labwork1_CPU() {
     }
 }
 
-void Labwork::labwork1_OpenMP() {
+void Labwork::labwork1_OpenMP(int threads) {
     int pixelCount = inputImage->width * inputImage->height;
     outputImage = static_cast<char *>(malloc(pixelCount * 3));
-    // do something here
+    omp_set_num_threads(threads);
         
     for (int j = 0; j < 100; j++) {     // let's do it 100 times, otherwise it's too fast!
         # pragma omp parallel for
