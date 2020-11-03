@@ -175,7 +175,7 @@ void Labwork::labwork2_GPU() {
 
 __global__ void grayscale(uchar3 *input, uchar3 *output) {
     int tid = threadIdx.x + blockIdx.x * blockDim.x;
-    output[tid].x = (unsigned char)((int)input[tid].x + (int)input[tid].y + (int)input[tid].z) / 3;
+    output[tid].x = (char)(((int)input[tid].x + (int)input[tid].y + (int)input[tid].z) / 3);
     output[tid].z = output[tid].y = output[tid].x;
 }
 
@@ -201,10 +201,6 @@ void Labwork::labwork3_GPU() {
 
     // Copy CUDA Memory from GPU to CPU
     cudaMemcpy(outputImage, devOutput, pixelCount * 3, cudaMemcpyDeviceToHost);
-
-    for (int i = 0; i<10; ++i) {
-        printf("%d ", outputImage[i * 3]);
-    }
 
     // Cleaning
     free(hostInput);
