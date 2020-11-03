@@ -36,12 +36,9 @@ int main(int argc, char **argv) {
             labwork.labwork1_CPU();
             labwork.saveOutputImage("labwork2-cpu-out.jpg");
             printf("labwork 1 CPU ellapsed %.1fms\n", lwNum, timer.getElapsedTimeInMilliSec());
-            for (int i=1; i<64; ++i) {
-	    	timer.start();
-            	labwork.labwork1_OpenMP(i);
-                printf("%d", i, timer.getElapsedTimeInMilliSec());
-	    }            
-	    labwork.saveOutputImage("labwork2-openmp-out.jpg");
+            timer.start();
+            labwork.labwork1_OpenMP();
+            labwork.saveOutputImage("labwork2-openmp-out.jpg");
             break;
         case 2:
             labwork.labwork2_GPU();
@@ -109,10 +106,11 @@ void Labwork::labwork1_CPU() {
     }
 }
 
-void Labwork::labwork1_OpenMP(int threads) {
+void Labwork::labwork1_OpenMP() {
     int pixelCount = inputImage->width * inputImage->height;
     outputImage = static_cast<char *>(malloc(pixelCount * 3));
-    omp_set_num_threads(threads);
+    // do something here
+        
     for (int j = 0; j < 100; j++) {     // let's do it 100 times, otherwise it's too fast!
         # pragma omp parallel for
         for (int i = 0; i < pixelCount; i++) {
@@ -160,6 +158,14 @@ void Labwork::labwork2_GPU() {
         cudaDeviceProp prop;
         cudaGetDeviceProperties(&prop, i);
         // something more here
+        printf("GPU info\n");
+        printf("  Name:                    %s\n", prop.name);  
+        printf("  Clock rate:              %d\n", prop.clockRate);
+        printf("  CUDA cores:              %d\n", getSPcores(prop));
+        printf("  Multiprocessors:         %d\n", prop.multiProcessorCount);
+        printf("  Warp size:               %d\n", prop.warpSize);
+        printf("  Memory Clock rate (KHz): %d\n", prop.memoryClockRate);
+        printf("  Memory Bus width (bits): %d\n", prop.memoryBusWidth); 
     }
 
 }

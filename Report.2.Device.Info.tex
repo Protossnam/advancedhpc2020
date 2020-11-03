@@ -1,0 +1,115 @@
+\documentclass[10pt, a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[left=2cm, right=2cm, top=0.5in, bottom=0.5in, includefoot, headheight=13.6pt]{geometry}
+
+\usepackage[utf8]{inputenc}
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{titling}
+
+\usepackage{minted}
+\usepackage{xcolor,listings}
+\usepackage{textcomp}
+\usepackage{color}
+\usepackage{scrextend}
+
+\usepackage{tikz}
+\usepackage{pgfplots}
+
+\usepackage[caption = false]{subfig}
+
+\usepackage[square, comma, numbers, sort&compress]{natbib}
+\usepackage{graphicx, color}
+
+\newcommand{\subtitle}[1]{%
+  \posttitle{%
+    \par\end{center}
+    \begin{center}\LARGE#1\end{center}
+    \vskip0.5cm}%
+}
+
+\usepackage{hyperref}
+\usepackage{listings}
+
+\title{[MI3.04a] Advanced Programming for HPC}
+\subtitle{Report Get to know your GPU \\ Labwork 2}
+\author{HUYNH Vinh Nam \\ M19.ICT.007}
+\date{November 2020}
+
+\renewcommand{\baselinestretch}{1.5} 
+
+\begin{document}
+% Report title
+\maketitle
+
+% Report structure
+
+\section{Screenshot}
+    \begin{center}
+        \begin{figure}[H]
+            \centering
+            \subfloat[Original Image]{\includegraphics[scale=0.9]{images/GPU.png}} 
+            \label{fig:gpu-devices}
+        \end{figure}
+    \end{center}
+    
+\clearpage
+
+\hfill \hfill
+\section{Bash output}
+    \begin{minted}{bash}
+./labwork 2
+USTH ICT Master 2018, Advanced Programming for HPC.
+Warming up...
+Starting labwork 2
+Number total of GPU : 2
+
+GPU info
+  Name:                    Tesla K40c
+  Clock rate:              745000
+  CUDA cores:              2880
+  Multiprocessors:         15
+  Warp size:               32
+  Memory Clock rate (KHz): 3004000
+  Memory Bus width (bits): 384
+GPU info
+  Name:                    GeForce GTX TITAN Black
+  Clock rate:              980000
+  CUDA cores:              2880
+  Multiprocessors:         15
+  Warp size:               32
+  Memory Clock rate (KHz): 3500000
+  Memory Bus width (bits): 384
+labwork 2 ellapsed 0.8ms    
+    \end{minted}
+
+\clearpage
+
+\hfill \hfill
+\section{Implementation}
+
+\begin{minted}{C++}
+void Labwork::labwork2_GPU() {
+    int nDevices = 0;
+    // get all devices
+    cudaGetDeviceCount(&nDevices);
+    printf("Number total of GPU : %d\n\n", nDevices);
+    for (int i = 0; i < nDevices; i++){
+        // get informations from individual device
+        cudaDeviceProp prop;
+        cudaGetDeviceProperties(&prop, i);
+        // something more here
+        printf("GPU info\n");
+        printf("  Name:                    %s\n", prop.name);  
+        printf("  Clock rate:              %d\n", prop.clockRate);
+        printf("  CUDA cores:              %d\n", getSPcores(prop));
+        printf("  Multiprocessors:         %d\n", prop.multiProcessorCount);
+        printf("  Warp size:               %d\n", prop.warpSize);
+        printf("  Memory Clock rate (KHz): %d\n", prop.memoryClockRate);
+        printf("  Memory Bus width (bits): %d\n", prop.memoryBusWidth); 
+    }
+
+}
+\end{minted}
+
+\end{document}
