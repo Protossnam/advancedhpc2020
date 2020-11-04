@@ -36,11 +36,8 @@ int main(int argc, char **argv) {
             labwork.labwork1_CPU();
             labwork.saveOutputImage("labwork2-cpu-out.jpg");
             printf("labwork 1 CPU ellapsed %.1fms\n", lwNum, timer.getElapsedTimeInMilliSec());
-            for (int i=1; i<64; ++i) {
-                timer.start();
-                labwork.labwork1_OpenMP(i);
-                printf("%d", i, timer.getElapsedTimeInMilliSec());
-            }
+            timer.start();
+            labwork.labwork1_OpenMP();
             labwork.saveOutputImage("labwork2-openmp-out.jpg");
             break;
         case 2:
@@ -109,10 +106,10 @@ void Labwork::labwork1_CPU() {
     }
 }
 
-void Labwork::labwork1_OpenMP(int threads) {
+void Labwork::labwork1_OpenMP() {
     int pixelCount = inputImage->width * inputImage->height;
     outputImage = static_cast<char *>(malloc(pixelCount * 3));
-    omp_set_num_threads(threads);
+    // do something here
         
     for (int j = 0; j < 100; j++) {     // let's do it 100 times, otherwise it's too fast!
         # pragma omp parallel for
@@ -175,7 +172,7 @@ void Labwork::labwork2_GPU() {
 
 __global__ void grayscale(uchar3 *input, uchar3 *output) {
     int tid = threadIdx.x + blockIdx.x * blockDim.x;
-    output[tid].x = (char)(((int)input[tid].x + (int)input[tid].y + (int)input[tid].z) / 3);
+    output[tid].x = (unsigned char)(((int)input[tid].x + (int)input[tid].y + (int)input[tid].z) / 3);
     output[tid].z = output[tid].y = output[tid].x;
 }
 
@@ -196,7 +193,7 @@ void Labwork::labwork3_GPU() {
 
     // Processing
     int blockSize = 64;
-    int numBlock = pixelCount / blockSize;
+    int numBlock = pixelCount / blockSize + 1;
     grayscale<<<numBlock, blockSize>>>(devInput, devOutput);
 
     // Copy CUDA Memory from GPU to CPU
@@ -208,12 +205,13 @@ void Labwork::labwork3_GPU() {
     cudaFree(devOutput);
 }
 
-__global__ void grayscale_2d(uchar3 *input, uchar3 *output) {
-    int x = threadIdx.x + blockIdx.x * blockDim.x;
-    int y = threadIdx.y + blockIdx.y * blockDim.y;
-    int w = blockDim.x * gridDim.x;
-    output[x + y*w].x = (char)(((int)input[x + y*w].x + (int)input[x + y*w].y + (int)input[x + y*w].z) / 3);
-    output[x + y*w].z = output[x + y*w].y = output[x + y*w].x;
+__global__ void grayscale_2d(uchar3 *input, uchar3 *output, int img_width, int img_height) {
+    int col = threadIdx.x + blockIdx.x * blockDim.x;
+    int row = threadIdx.y + blockIdx.y * blockDim.y;
+    if (col >= img_width || row >= img_height) return;
+    int tid = row * img_width + col;
+    output[tid].x = (unsigned char)(((int)input[tid].x + (int)input[tid].y + (int)input[tid].z) / 3);
+    output[tid].z = output[tid].y = output[tid].x;
 }
 
 void Labwork::labwork4_GPU() {
@@ -233,8 +231,8 @@ void Labwork::labwork4_GPU() {
 
     // Processing
     dim3 blockSize = dim3(32,32);
-    dim3 gridSize = dim3(inputImage->width / blockSize.x + 1, inputImage->height / blockSize.y + 1);
-    grayscale_2d<<<gridSize, blockSize>>>(devInput, devOutput);
+    dim3 gridSize = dim3((int)((inputImage->width + blockSize.x - 1) / blockSize.x), (int)((inputImage->height + blockSize.y - 1)/ blockSize.y));
+    grayscale_2d<<<gridSize, blockSize>>>(devInput, devOutput, inputImage->width, inputImage->height);
 
     // Copy CUDA Memory from GPU to CPU
     cudaMemcpy(outputImage, devOutput, pixelCount * 3, cudaMemcpyDeviceToHost);
