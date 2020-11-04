@@ -1,0 +1,103 @@
+\documentclass[10pt, a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[left=2cm, right=2cm, top=0.5in, bottom=0.5in, includefoot, headheight=13.6pt]{geometry}
+
+\usepackage[utf8]{inputenc}
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{titling}
+
+\usepackage{minted}
+\usepackage{xcolor,listings}
+\usepackage{textcomp}
+\usepackage{color}
+\usepackage{scrextend}
+
+\usepackage{tikz}
+\usepackage{pgfplots}
+
+\usepackage[caption = false]{subfig}
+
+\usepackage[square, comma, numbers, sort&compress]{natbib}
+\usepackage{graphicx, color}
+
+\newcommand{\subtitle}[1]{%
+  \posttitle{%
+    \par\end{center}
+    \begin{center}\LARGE#1\end{center}
+    \vskip0.5cm}%
+}
+
+\usepackage{hyperref}
+\usepackage{listings}
+
+\title{[MI3.04a] Advanced Programming for HPC}
+\subtitle{Threads \\ Labwork 4}
+\author{HUYNH Vinh Nam \\ M19.ICT.007}
+\date{November 2020}
+
+\renewcommand{\baselinestretch}{1.5} 
+
+\begin{document}
+% Report title
+\maketitle
+
+% Report structure
+
+\section*{Original Input}
+    \begin{center}
+        \begin{figure}[H]
+            \centering
+            \subfloat[Original Image]{\includegraphics[scale=0.25]{images/hl3.jpg}}
+            \label{fig:cuda-input}
+        \end{figure}
+    \end{center}
+    
+\section*{Output}
+    \begin{center}
+        \begin{figure}[H]
+            \centering
+            \subfloat[Output]{\includegraphics[scale=0.25]{images/labwork4-gpu-out-hl3.jpg}}
+            \label{fig:cuda-outputs}
+        \end{figure}
+    \end{center}
+
+\hfill
+\section*{Implementation}
+
+\begin{minted}{C++}
+__global__ void grayscale_2d(uchar3 *input, uchar3 *output) {
+    int x = threadIdx.x + blockIdx.x * blockDim.x;
+    int y = threadIdx.y + blockIdx.y * blockDim.y;
+    int w = blockDim.x * gridDim.x;
+    output[x + y*w].x = (char)(((int)input[x + y*w].x + (int)input[x + y*w].y 
+                              + (int)input[x + y*w].z) / 3);
+    output[x + y*w].z = output[x + y*w].y = output[x + y*w].x;
+}
+
+void Labwork::labwork4_GPU() {
+    int pixelCount = inputImage->width * inputImage->height;
+    char *hostInput = inputImage->buffer;
+    outputImage = static_cast<char *>(malloc(pixelCount * 3));
+
+    uchar3 *devInput;
+    uchar3 *devOutput;
+    cudaMalloc(&devInput, pixelCount * 3);
+    cudaMalloc(&devOutput, pixelCount * 3);
+    
+    cudaMemcpy(devInput, hostInput, pixelCount * 3, cudaMemcpyHostToDevice);
+
+    dim3 blockSize = dim3(32,32);
+    dim3 gridSize = dim3(inputImage->width / blockSize.x + 1, inputImage->height / blockSize.y + 1);
+    grayscale_2d<<<gridSize, blockSize>>>(devInput, devOutput);
+
+    cudaMemcpy(outputImage, devOutput, pixelCount * 3, cudaMemcpyDeviceToHost);
+
+    free(hostInput);
+    cudaFree(devInput);
+    cudaFree(devOutput);
+}
+
+\end{minted}
+
+\end{document}
