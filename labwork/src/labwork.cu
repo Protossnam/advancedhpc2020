@@ -95,10 +95,10 @@ void Labwork::saveOutputImage(std::string outputFileName) {
 
 void Labwork::labwork1_CPU() {
     int pixelCount = inputImage->width * inputImage->height;
-    outputImage = static_cast<char *>(malloc(pixelCount * 3));
+    outputImage = static_cast<unsigned char *>(malloc(pixelCount * 3));
     for (int j = 0; j < 100; j++) {     // let's do it 100 times, otherwise it's too fast!
         for (int i = 0; i < pixelCount; i++) {
-            outputImage[i * 3] = (char) (((int) inputImage->buffer[i * 3] + (int) inputImage->buffer[i * 3 + 1] +
+            outputImage[i * 3] = (unsigned char) (((int) inputImage->buffer[i * 3] + (int) inputImage->buffer[i * 3 + 1] +
                                           (int) inputImage->buffer[i * 3 + 2]) / 3);
             outputImage[i * 3 + 1] = outputImage[i * 3];
             outputImage[i * 3 + 2] = outputImage[i * 3];
@@ -108,13 +108,13 @@ void Labwork::labwork1_CPU() {
 
 void Labwork::labwork1_OpenMP() {
     int pixelCount = inputImage->width * inputImage->height;
-    outputImage = static_cast<char *>(malloc(pixelCount * 3));
+    outputImage = static_cast<unsigned char *>(malloc(pixelCount * 3));
     // do something here
         
     for (int j = 0; j < 100; j++) {     // let's do it 100 times, otherwise it's too fast!
         # pragma omp parallel for
         for (int i = 0; i < pixelCount; i++) {
-            outputImage[i * 3] = (char) (((int) inputImage->buffer[i * 3] + (int) inputImage->buffer[i * 3 + 1] +
+            outputImage[i * 3] = (unsigned char) (((int) inputImage->buffer[i * 3] + (int) inputImage->buffer[i * 3 + 1] +
                                           (int) inputImage->buffer[i * 3 + 2]) / 3);
             outputImage[i * 3 + 1] = outputImage[i * 3];
             outputImage[i * 3 + 2] = outputImage[i * 3];
@@ -179,8 +179,8 @@ __global__ void grayscale(uchar3 *input, uchar3 *output) {
 void Labwork::labwork3_GPU() {
     // Calculate number of pixels
     int pixelCount = inputImage->width * inputImage->height;
-    char *hostInput = inputImage->buffer;
-    outputImage = static_cast<char *>(malloc(pixelCount * 3));
+    unsigned char *hostInput = inputImage->buffer;
+    outputImage = static_cast<unsigned char *>(malloc(pixelCount * 3));
 
     // Allocate CUDA memory    
     uchar3 *devInput;
@@ -217,8 +217,8 @@ __global__ void grayscale_2d(uchar3 *input, uchar3 *output, int img_width, int i
 void Labwork::labwork4_GPU() {
     // Calculate number of pixels
     int pixelCount = inputImage->width * inputImage->height;
-    char *hostInput = inputImage->buffer;
-    outputImage = static_cast<char *>(malloc(pixelCount * 3));
+    unsigned char *hostInput = inputImage->buffer;
+    outputImage = static_cast<unsigned char *>(malloc(pixelCount * 3));
 
     // Allocate CUDA memory    
     uchar3 *devInput;
@@ -248,9 +248,9 @@ void Labwork::labwork5_CPU() {
     int h = inputImage->height;
 
     labwork1_CPU();
-    char *grayImage = outputImage;
+    unsigned char *grayImage = outputImage;
     int pixelCount = w * h;
-    outputImage = static_cast<char *>(malloc(pixelCount * 3));   
+    outputImage = static_cast<unsigned char *>(malloc(pixelCount * 3));   
     memset(outputImage, 0, pixelCount * 3);
 
     float filter[]={
@@ -277,10 +277,99 @@ void Labwork::labwork5_CPU() {
             outputImage[(row * w + col)*3 + 2] = sum;
         }
     }
+}
 
+__global__ void gaussian_no_shared(uchar3 *input, uchar3 *output, int img_width, int img_height) {
+    int col = threadIdx.x + blockIdx.x * blockDim.x;
+    int row = threadIdx.y + blockIdx.y * blockDim.y;
+
+    int w = img_width;
+    int h = img_height;
+
+    if (col >= w || row >= h) return;
+    int tid = row * w + col;
+
+    float filter[]={
+        0,   0,   1,   2,   1,   0,   0,
+        0,   3,   13,  22,  13,  3,   0,
+        1,   13,  59,  97,  59,  13,  1,
+        2,   22,  97,  159, 97,  22,  2,
+        1,   13,  59,  97,  59,  13,  1,
+        0,   3,   13,  22,  13,  3,   0,
+        0,   0,   1,   2,   1,   0,   0
+    };
+
+    for (int row = 3; row <= h - 3; ++row) {
+        for (int col = 3; col <= w - 3; ++col) {
+            int sum = 0;
+            for (int j = -3; j <= 3; ++j) { 
+                for (int i = -3; i <= 3; ++i) {
+                    sum += input[(tid + j*w + i) * 3].x * filter[(j+3)*7+i+3];
+                } 
+                __syncthreads();
+            }
+
+            sum /= 1003;
+            output[tid].x = output[tid].y = output[tid].z = sum;
+        }
+    }
+}
+
+__global__ void gaussian_shared(uchar3 *input, uchar3 *output, int img_width, int img_height) {
+/*
+    __shared__ float filter[]={
+        0,   0,   1,   2,   1,   0,   0,
+        0,   3,   13,  22,  13,  3,   0,
+        1,   13,  59,  97,  59,  13,  1,
+        2,   22,  97,  159, 97,  22,  2,
+        1,   13,  59,  97,  59,  13,  1,
+        0,   3,   13,  22,  13,  3,   0,
+        0,   0,   1,   2,   1,   0,   0
+    };
+
+    __syncthreads();
+
+    int col = threadIdx.x + blockIdx.x * blockDim.x;
+    int row = threadIdx.y + blockIdx.y * blockDim.y;
+    if (col >= img_width || row >= img_height) return;
+    int tid = row * img_width + col;
+    
+    output[tid].x = (unsigned char)((int)input[tid].x * filter[tid]);
+    output[tid].z = output[tid].y = output[tid].x;
+*/
 }
 
 void Labwork::labwork5_GPU(bool shared) {
+    int w = inputImage->width;
+    int h = inputImage->height;
+
+    labwork4_GPU();
+    unsigned char *grayImage = outputImage;
+    int pixelCount = w * h;
+    outputImage = static_cast<unsigned char *>(malloc(pixelCount * 3));   
+    memset(outputImage, 0, pixelCount * 3);
+
+    uchar3 *devInput;
+    uchar3 *devOutput;
+    cudaMalloc(&devInput, pixelCount * 3);
+    cudaMalloc(&devOutput, pixelCount * 3);
+
+    cudaMemcpy(devInput, grayImage, pixelCount * 3, cudaMemcpyHostToDevice);
+
+    dim3 blockSize = dim3(7,7);
+    dim3 gridSize = dim3((int)((w + blockSize.x - 1) / blockSize.x), (int)((h + blockSize.y - 1)/ blockSize.y));;
+    
+    if (shared == FALSE) {
+        gaussian_no_shared<<<gridSize, blockSize>>>(devInput, devOutput, w, h);
+    } else {
+        gaussian_shared<<<gridSize, blockSize>>>(devInput, devOutput, w, h);
+    }
+
+    cudaMemcpy(outputImage, devOutput, pixelCount * 3, cudaMemcpyDeviceToHost);
+
+    free(grayImage);
+    cudaFree(devInput);
+    cudaFree(devOutput);
 }
 
 void Labwork::labwork6_GPU() {
