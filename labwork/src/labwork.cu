@@ -244,6 +244,40 @@ void Labwork::labwork4_GPU() {
 }
 
 void Labwork::labwork5_CPU() {
+    int w = inputImage->width;
+    int h = inputImage->height;
+
+    labwork1_CPU();
+    char *grayImage = outputImage;
+    int pixelCount = w * h;
+    outputImage = static_cast<char *>(malloc(pixelCount * 3));   
+    memset(outputImage, 0, pixelCount * 3);
+
+    float filter[]={
+        0,   0,   1,   2,   1,   0,   0,
+        0,   3,   13,  22,  13,  3,   0,
+        1,   13,  59,  97,  59,  13,  1,
+        2,   22,  97,  159, 97,  22,  2,
+        1,   13,  59,  97,  59,  13,  1,
+        0,   3,   13,  22,  13,  3,   0,
+        0,   0,   1,   2,   1,   0,   0
+    };
+
+    for (int row = 3; row <= h - 3; ++row) {
+        for (int col = 3; col <= w - 3; ++col) {
+            int sum = 0;
+            for (int j = -3; j <= 3; ++j) { 
+                for (int i = -3; i <= 3; ++i) {
+                    sum += grayImage[((row + j) * w + col + i) * 3] * filter[(j+3)*7+i+3];
+                } 
+            }
+            sum /= 1003;
+            outputImage[(row * w + col)*3] = sum;
+            outputImage[(row * w + col)*3 + 1] = sum;
+            outputImage[(row * w + col)*3 + 2] = sum;
+        }
+    }
+
 }
 
 void Labwork::labwork5_GPU(bool shared) {
