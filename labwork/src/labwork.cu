@@ -299,20 +299,16 @@ __global__ void gaussian_no_shared(uchar3 *input, uchar3 *output, int img_width,
         0,   0,   1,   2,   1,   0,   0
     };
 
-    for (int row = 3; row <= h - 3; ++row) {
-        for (int col = 3; col <= w - 3; ++col) {
-            int sum = 0;
-            for (int j = -3; j <= 3; ++j) { 
-                for (int i = -3; i <= 3; ++i) {
-                    sum += input[(tid + j*w + i) * 3].x * filter[(j+3)*7+i+3];
-                } 
-                __syncthreads();
-            }
-
-            sum /= 1003;
-            output[tid].x = output[tid].y = output[tid].z = sum;
-        }
+    int sum = 0;
+    for (int j = -3; j <= 3; ++j) { 
+        for (int i = -3; i <= 3; ++i) {
+            sum += input[(tid + j*w + i) * 3].x * filter[(j+3)*7+i+3];
+        } 
+        __syncthreads();
     }
+
+    sum /= 1003;
+    output[tid].x = output[tid].y = output[tid].z = sum;
 }
 
 __global__ void gaussian_shared(uchar3 *input, uchar3 *output, int img_width, int img_height) {
