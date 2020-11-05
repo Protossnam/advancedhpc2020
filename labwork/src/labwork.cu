@@ -368,7 +368,109 @@ void Labwork::labwork5_GPU(bool shared) {
     cudaFree(devOutput);
 }
 
+__device__ int binarization(int input, int threshold) {
+    if (input < threshold) 
+        return 0; 
+    else
+        return 255;
+}
+
+__device__ int brightness(int input, int threshold) {
+    int output = input + threshold;
+    if (output > 255) output = 255;
+    return output;
+}
+
+__device__ int blending(int input1, int input2, float coeff) {
+    int output = (int)(coeff*input1 + (1-coeff)*input2);
+    if (output > 255) output = 255;
+    return output;
+}
+
+__global__ void six_a(uchar3 *input, uchar3 *output, int img_width, int img_height) {
+    int col = threadIdx.x + blockIdx.x * blockDim.x;
+    int row = threadIdx.y + blockIdx.y * blockDim.y;
+
+    int w = img_width;
+    int h = img_height;
+
+    if (col >= w || row >= h) return;
+    int tid = row * w + col;
+
+    int threshold = 1;
+
+    output[tid].x = binarization(input[tid].x, threshold);
+    output[tid].x = output[tid].y = output[tid].z;
+}
+
+__global__ void six_b(uchar3 *input, uchar3 *output, int img_width, int img_height) {
+    int col = threadIdx.x + blockIdx.x * blockDim.x;
+    int row = threadIdx.y + blockIdx.y * blockDim.y;
+
+    int w = img_width;
+    int h = img_height;
+
+    if (col >= w || row >= h) return;
+    int tid = row * w + col;
+
+    int threshold = 20;
+
+    output[tid].x = brightness(input[tid].x, threshold);
+    output[tid].y = brightness(input[tid].y, threshold);
+    output[tid].z = brightness(input[tid].z, threshold);
+}
+
+__global__ void six_c(uchar3 *input1, uchar3 *input2, uchar3 *output, int img_width, int img_height) {
+    int col = threadIdx.x + blockIdx.x * blockDim.x;
+    int row = threadIdx.y + blockIdx.y * blockDim.y;
+
+    int w = img_width;
+    int h = img_height;
+
+    if (col >= w || row >= h) return;
+    int tid = row * w + col;
+
+    float coeff = 0.5;
+
+    output[tid].x = blending(input1[tid].x, input2[tid].x, coeff);
+    output[tid].y = blending(input1[tid].y, input2[tid].y, coeff);
+    output[tid].z = blending(input1[tid].z, input2[tid].z, coeff);
+}
+
 void Labwork::labwork6_GPU() {
+    int w = inputImage->width;
+    int h = inputImage->height;
+
+    labwork4_GPU();
+    unsigned char *grayImage = outputImage;
+    int pixelCount = w * h;
+    outputImage = static_cast<unsigned char *>(malloc(pixelCount * 3));   
+    memset(outputImage, 0, pixelCount * 3);
+
+    uchar3 *devInput, *devInput1, *devInput2;
+    uchar3 *devOutput;
+    cudaMalloc(&devInput, pixelCount * 3);
+    cudaMalloc(&devInput1, pixelCount * 3);
+    cudaMalloc(&devInput2, pixelCount * 3);
+    cudaMalloc(&devOutput, pixelCount * 3);
+
+    cudaMemcpy(devInput, grayImage, pixelCount * 3, cudaMemcpyHostToDevice);
+
+    // cudaMemcpy(devInput1, inputImage, pixelCount * 3, cudaMemcpyHostToDevice);
+    // cudaMemcpy(devInput2, inputImage, pixelCount * 3, cudaMemcpyHostToDevice);
+
+    dim3 blockSize = dim3(32,32);
+    dim3 gridSize = dim3((int)((w + blockSize.x - 1) / blockSize.x), (int)((h + blockSize.y - 1)/ blockSize.y));;
+
+    six_a<<<gridSize, blockSize>>>(devInput, devOutput, w, h);
+    // six_b<<<gridSize, blockSize>>>(devInput, devOutput, w, h);
+    // six_c<<<gridSize, blockSize>>>(devInput1, devInput2, devOutput, w, h);
+
+    cudaMemcpy(outputImage, devOutput, pixelCount * 3, cudaMemcpyDeviceToHost);
+
+    free(grayImage);
+    cudaFree(devInput);
+    cudaFree(devOutput);
 }
 
 void Labwork::labwork7_GPU() {
