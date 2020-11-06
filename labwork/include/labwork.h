@@ -8,7 +8,7 @@ class Labwork {
 private:
     JpegLoader jpegLoader;
     JpegInfo *inputImage;
-    unsigned char *outputImage;
+    unsigned char *outputImage, *outputImage1, *outputImage2;
 
 public:
     void loadInputImage(std::string inputFileName);

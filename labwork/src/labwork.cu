@@ -432,7 +432,7 @@ __global__ void six_b(uchar3 *input, uchar3 *output, int img_width, int img_heig
     if (col >= w || row >= h) return;
     int tid = row * w + col;
 
-    int threshold = 20;
+    int threshold = 100;
 
     output[tid].x = brightness(input[tid].x, threshold);
     output[tid].y = brightness(input[tid].y, threshold);
@@ -488,11 +488,11 @@ void Labwork::labwork6_GPU() {
     // Part b
     outputImage1 = static_cast<unsigned char *>(malloc(pixelCount * 3));
     memset(outputImage1, 0, pixelCount * 3);
-    cudaMemcpy(devInput1, inputImage, pixelCount * 3, cudaMemcpyHostToDevice);
+    cudaMemcpy(devInput1, inputImage->buffer, pixelCount * 3, cudaMemcpyHostToDevice);
 
     six_b<<<gridSize, blockSize>>>(devInput1, devOutput1, w, h);
     cudaMemcpy(outputImage1, devOutput1, pixelCount * 3, cudaMemcpyDeviceToHost);
-
+/*
     // Part c
     outputImage2 = static_cast<unsigned char *>(malloc(pixelCount * 3));
     memset(outputImage2, 0, pixelCount * 3);
@@ -501,7 +501,7 @@ void Labwork::labwork6_GPU() {
 
     six_c<<<gridSize, blockSize>>>(devInput2, devInput3, devOutput2, w, h);
     cudaMemcpy(outputImage2, devOutput2, pixelCount * 3, cudaMemcpyDeviceToHost);
-
+*/
     free(grayImage);
     cudaFree(devInput);
     cudaFree(devInput1);
